@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 
 from app.db.memory import db
 from app.core.auth import get_current_user, oauth2_scheme
-from app.utils.email import send_password_reset_email
+from app.utils.email import send_password_reset_email, test_password_reset_email
 from app.core.security import hash_password, verify_password
 from app.core.tokens import create_reset_token, verify_token, revoke_token, TokenType
 from app.utils.helpers import build_access_token, build_user_out, register_user
@@ -71,7 +71,9 @@ def forgot_password(request: ForgotPasswordRequest):
     if user:
             try:
                 reset_token = create_reset_token(user["id"])
-                send_password_reset_email(user["email"], reset_token)
+                
+                #send_password_reset_email(user["email"], reset_token)
+                test_password_reset_email(user["email"], reset_token)
             except Exception as e:
                 pass
 
