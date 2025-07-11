@@ -4,6 +4,8 @@ from app.db.memory import db
 from app.core.auth import get_current_user
 from app.utils.helpers import build_user_out
 
+from app.schemas.auth import BaseResponse
+
 from app.schemas.user import(
     UserType,
     OwnerUpdate, OwnerOut,
@@ -41,7 +43,7 @@ def update_profile(data: OwnerUpdate | ClinicUpdate, current_user: dict = Depend
 
     return build_user_out(updated_user)
 
-@router.delete("/account")
+@router.delete("/account", response_model=BaseResponse)
 def delete_account(current_user: dict = Depends(get_current_user)):
     deleted = db.delete(current_user["id"])
     if not deleted:

@@ -9,7 +9,7 @@ from app.utils.helpers import build_access_token, build_user_out, register_user
 
 from app.schemas.auth import (
     ResetPasswordRequest, ChangePasswordRequest, ForgotPasswordRequest,
-    BaseAuthResponse, UserLoginRequest, UserLoginResponse
+    BaseResponse, UserLoginRequest, UserLoginResponse
 )
 
 from app.schemas.user import(
@@ -39,7 +39,7 @@ def login(user: UserLoginRequest):
         "token": token
     }
 
-@router.post("/logout", response_model=BaseAuthResponse)
+@router.post("/logout", response_model=BaseResponse)
 def logout(token: str = Depends(oauth2_scheme)):
     revoked = revoke_token(token)
 
@@ -64,7 +64,7 @@ def register_clinic(data: ClinicRegister):
     result = register_user(data, UserType.CLINIC)
     return result
 
-@router.post("/forgot-password", response_model=BaseAuthResponse)
+@router.post("/forgot-password", response_model=BaseResponse)
 def forgot_password(request: ForgotPasswordRequest):
     user = db.get_by_email(request.email)
     
@@ -82,7 +82,7 @@ def forgot_password(request: ForgotPasswordRequest):
         "message": "Password reset email sent."
     }
 
-@router.post("/reset-password", response_model=BaseAuthResponse)
+@router.post("/reset-password", response_model=BaseResponse)
 def reset_password(data: ResetPasswordRequest):
     payload = verify_token(data.token, TokenType.RESET)
     user_id = payload.get("sub")
@@ -103,7 +103,7 @@ def reset_password(data: ResetPasswordRequest):
         "message": "Password has been updated successfully."
     }
 
-@router.put("/change-password", response_model=BaseAuthResponse)
+@router.put("/change-password", response_model=BaseResponse)
 def change_password(data: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
     if not verify_password(data.currentPassword, current_user["password"]):
 
