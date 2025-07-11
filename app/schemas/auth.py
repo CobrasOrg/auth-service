@@ -55,6 +55,6 @@ class UserLoginResponse(BaseModel):
     token: str
     user: OwnerOut | ClinicOut
 
-class BaseAuthResponse(BaseModel):
+class BaseResponse(BaseModel):
     success: bool
     message: str
