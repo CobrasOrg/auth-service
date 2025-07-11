@@ -40,3 +40,17 @@ def update_profile(data: OwnerUpdate | ClinicUpdate, current_user: dict = Depend
         )
 
     return build_user_out(updated_user)
+
+@router.delete("/account")
+def delete_account(current_user: dict = Depends(get_current_user)):
+    deleted = db.delete(current_user["id"])
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while processing your request."
+        )
+    
+    return {
+        "success": True,
+        "message": "Account deleted successfully."
+    }
