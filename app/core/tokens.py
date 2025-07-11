@@ -8,16 +8,24 @@ from app.core.config import settings
 
 class TokenType(str, Enum):
     ACCESS = "access"
+    RESET = "reset"
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+RESET_TOKEN_EXPIRE_MINUTES = settings.RESET_TOKEN_EXPIRE_MINUTES
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire, "type": TokenType.ACCESS})
+    
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def create_reset_token(user_id: str):
+    expire = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+    to_encode = {"sub": user_id, "exp": expire, "type": TokenType.RESET}
     
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
