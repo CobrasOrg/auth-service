@@ -1,10 +1,10 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 
 from app.db.memory import db
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, oauth2_scheme
 from app.utils.email import send_password_reset_email
 from app.core.security import hash_password, verify_password
-from app.core.tokens import create_reset_token, verify_token, TokenType
+from app.core.tokens import create_reset_token, verify_token, revoke_token, TokenType
 from app.utils.helpers import build_access_token, build_user_out, register_user
 
 from app.schemas.auth import (
@@ -37,6 +37,21 @@ def login(user: UserLoginRequest):
         "success": True,
         "user": user_out,
         "token": token
+    }
+
+@router.post("/logout", response_model=BaseAuthResponse)
+def logout(token: str = Depends(oauth2_scheme)):
+    revoked = revoke_token(token)
+
+    if not revoked:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token or already expired."
+        )
+
+    return {
+        "success": True,
+        "message": "Logged out successfully."
     }
     
 @router.post("/register/owner", response_model=OwnerRegisterResponse, status_code=201)
@@ -78,6 +93,8 @@ def reset_password(data: ResetPasswordRequest):
 
     new_hashed = hash_password(data.newPassword)
     db.update(user_id, {"password": new_hashed})
+
+    revoke_token(data.token)
 
     return {
         "success": True, 

@@ -5,6 +5,7 @@ from jose.exceptions import ExpiredSignatureError
 from datetime import datetime, timedelta, timezone
 
 from app.core.config import settings
+from app.db.token_blacklist import revoked_store
 
 class TokenType(str, Enum):
     ACCESS = "access"
@@ -33,6 +34,9 @@ def verify_token(token: str, expected_type: TokenType):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
+        if revoked_store.is_revoked(token):
+            raise HTTPException(status_code=401, detail="Token has been revoked.")
+
         if not payload.get("sub"):
             raise HTTPException(status_code=401, detail="Invalid token payload.")
         
@@ -45,3 +49,15 @@ def verify_token(token: str, expected_type: TokenType):
     
     except JWTError:
         raise HTTPException(status_code=401, detail=f"Invalid {expected_type.value.capitalize()} token.")
+    
+def revoke_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        exp_timestamp = payload.get("exp")
+        if exp_timestamp:
+            expires_at = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+            revoked_store.revoke(token, expires_at)
+            return True
+    except JWTError:
+        pass
+    return False
