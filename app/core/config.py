@@ -14,6 +14,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     RESET_TOKEN_EXPIRE_MINUTES: int = 15
     
+    # Email Configuration
+    GMAIL_USER: str
+    GMAIL_PASS: str
+    EMAIL_FROM_NAME: str = "PetMatch"
+    EMAIL_TEMPLATES_DIR: str = "app/templates"
+    
+    # Frontend URLs
+    FRONTEND_URL: str = "127.0.0.1"
+    RESET_PASSWORD_URL: str = "reset-password"
+    
     # Database
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DB_NAME: str = "petmatch"
@@ -37,6 +47,17 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY must be at least 32 characters long")
         return v
     
+    @field_validator("GMAIL_USER", mode="before")
+    @classmethod
+    def validate_gmail_user(cls, v: str) -> str:
+        if v and "@" not in v:
+            raise ValueError("GMAIL_USER must be a valid email address")
+        return v
+
+    @property
+    def reset_password_full_url(self) -> str:
+        return f"{self.FRONTEND_URL}{self.RESET_PASSWORD_URL}"
+
     class Config:
         case_sensitive = True
         env_file = ".env"
