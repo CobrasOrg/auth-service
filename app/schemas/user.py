@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
@@ -35,6 +36,18 @@ class OwnerOut(BaseUserOut):
 
 class ClinicOut(BaseUserOut):
     locality: str
+
+class BaseUserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    
+class OwnerUpdate(BaseUserUpdate):
+    pass
+
+class ClinicUpdate(BaseUserUpdate):
+    locality: Optional[str] = None
 
 class BaseRegisterResponse(BaseModel):
     success: bool

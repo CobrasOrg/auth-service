@@ -1,10 +1,16 @@
 from uuid import uuid4
 from typing import Dict, Optional
+from datetime import datetime, timezone
 
 class InMemoryUserDB:
     def __init__(self):
         self.users_by_id: Dict[str, dict] = {}
         self.email_to_id: Dict[str, str] = {}
+
+    def get_by_id(self, user_id: str) -> Optional[dict]:
+        if not user_id:
+            return None
+        return self.users_by_id.get(user_id)
 
     def get_by_email(self, email: str) -> Optional[dict]:
         if not email:
@@ -31,5 +37,28 @@ class InMemoryUserDB:
         self.email_to_id[email] = user_id
 
         return user_data_copy
+    
+    def update(self, user_id: str, updates: dict) -> Optional[dict]:
+        if not user_id or not updates:
+            return None
+            
+        user = self.get_by_id(user_id)
+        if not user:
+            return None
+
+        if "email" in updates:
+            old_email = user["email"].strip().lower()
+            new_email = updates["email"].strip().lower()
+
+            if new_email != old_email:
+                if new_email in self.email_to_id:
+                    raise ValueError("Email already exists.")
+                
+                del self.email_to_id[old_email]
+                self.email_to_id[new_email] = user_id
+
+        user.update(updates)
+        user["updatedAt"] = datetime.now(timezone.utc)
+        return user
 
 db = InMemoryUserDB()
