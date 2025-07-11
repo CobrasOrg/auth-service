@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.db.database import connect_to_mongo, close_mongo_connection
+from app.core.errors import validation_exception_handler, http_exception_handler
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,6 +24,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#Custom exception handlers
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+
 # Events
 @app.on_event("startup")
 async def startup_db_client():
@@ -38,7 +44,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 async def root():
     return {
         "message": f"Welcome to {settings.PROJECT_NAME}",
-        "version": settings.VERSION,
+        "version": settings.VERSION
     }
 
 @app.get("/health")
