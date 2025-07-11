@@ -1,11 +1,15 @@
 from uuid import uuid4
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from datetime import datetime, timezone
 
 class InMemoryUserDB:
     def __init__(self):
         self.users_by_id: Dict[str, dict] = {}
         self.email_to_id: Dict[str, str] = {}
+
+    def reset(self):
+        self.users_by_id.clear()
+        self.email_to_id.clear()
 
     def get_by_id(self, user_id: str) -> Optional[dict]:
         if not user_id:
@@ -37,6 +41,9 @@ class InMemoryUserDB:
         self.email_to_id[email] = user_id
 
         return user_data_copy
+
+    def get_all(self) -> List[dict]:
+        return list(self.users_by_id.values())
     
     def update(self, user_id: str, updates: dict) -> Optional[dict]:
         if not user_id or not updates:
@@ -61,4 +68,14 @@ class InMemoryUserDB:
         user["updatedAt"] = datetime.now(timezone.utc)
         return user
 
+    def delete(self, user_id: str) -> Optional[dict]:
+        if not user_id:
+            return None
+            
+        user = self.users_by_id.pop(user_id, None)
+        if user and "email" in user:
+            email = user["email"].strip().lower()
+            self.email_to_id.pop(email, None)
+        return user
+    
 db = InMemoryUserDB()
