@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     DESCRIPTION: str = "PetMatch Authentication and User Management API"
     
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    RESET_TOKEN_EXPIRE_MINUTES: int = 15
+    
     # Database
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DB_NAME: str = "petmatch"
@@ -24,6 +29,13 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
+    
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters long")
+        return v
     
     class Config:
         case_sensitive = True
