@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     # API Configuration
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "PetMatch Authentication API"
-    VERSION: str = "0.1.0"
+    VERSION: str = "1.0.5"
     DESCRIPTION: str = "PetMatch Authentication and User Management API"
     
     SECRET_KEY: str
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     EMAIL_TEMPLATES_DIR: str = "app/templates"
     
     # Frontend URLs
-    FRONTEND_URL: str = "127.0.0.1"
+    FRONTEND_URL: str = "http://127.0.0.1"
     RESET_PASSWORD_URL: str = "reset-password"
     
     # Database

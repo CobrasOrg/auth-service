@@ -9,7 +9,7 @@ from app.utils.helpers import build_access_token, build_user_out, register_user
 
 from app.schemas.auth import (
     ResetPasswordRequest, ChangePasswordRequest, ForgotPasswordRequest,
-    BaseResponse, UserLoginRequest, UserLoginResponse
+    BaseResponse, UserLoginRequest, UserLoginResponse, TokenVerificationResponse
 )
 
 from app.schemas.user import(
@@ -118,4 +118,25 @@ def change_password(data: ChangePasswordRequest, current_user: dict = Depends(ge
     return {
         "success": True, 
         "message": "Password has been updated successfully."
+    }
+
+@router.post("/verify-token", response_model=TokenVerificationResponse)
+def verify_token_API(token: str = Depends(oauth2_scheme)):
+    payload = verify_token(token, TokenType.ACCESS)
+
+    user_id = payload.get("sub")
+    user_type = payload.get("userType")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+    user = db.get_by_id(user_id)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found.")
+
+    return {
+        "success": True,
+        "user_id": user_id,
+        "user_type": user_type
     }
