@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
-from app.schemas.user import OwnerOut, ClinicOut
+from app.schemas.user import OwnerOut, ClinicOut, UserType
 
 from app.utils.validators import (
     validate_password_data, validate_token_data,
@@ -58,3 +58,8 @@ class UserLoginResponse(BaseModel):
 class BaseResponse(BaseModel):
     success: bool
     message: str
+
+class TokenVerificationResponse(BaseModel):
+    success: bool
+    user_id: str
+    user_type: UserType
