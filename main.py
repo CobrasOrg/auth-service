@@ -54,16 +54,56 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 # Include routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-@app.get("/")
+@app.get(
+    "/",
+    summary="API welcome message",
+    description="Returns a welcome message and the current version of the API.",
+    response_description="Welcome message with project name and version",
+    responses={
+        200: {
+            "description": "Welcome response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message": "Welcome to PetMatch Authentication API",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        }
+    },
+)
 async def root():
     return {
         "message": f"Welcome to {settings.PROJECT_NAME}",
         "version": settings.VERSION
     }
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Health check",
+    description="Used to check if the API is running and responsive.",
+    response_description="Health status and API version",
+    responses={
+        200: {
+            "description": "Healthy response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        }
+    },
+)
 async def health_check():
-    return {"status": "healthy", "version": settings.VERSION}
+    return {
+        "status": "healthy",
+        "version": settings.VERSION
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
