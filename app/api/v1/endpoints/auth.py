@@ -1,11 +1,12 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from app.db.memory import db
 from app.core.auth import get_current_user, oauth2_scheme
-from app.utils.email import send_password_reset_email, test_password_reset_email
-from app.core.security import hash_password, verify_password
-from app.core.tokens import create_reset_token, verify_token, revoke_token, TokenType
-from app.utils.helpers import build_access_token, build_user_out, register_user
+
+from app.services.auth_service import (
+    verify_user_token,
+    register_user, authenticate_user, logout_user,
+    change_password,  initiate_password_reset, reset_password
+)
 
 from app.schemas.auth import (
     ResetPasswordRequest, ChangePasswordRequest, ForgotPasswordRequest,
@@ -22,37 +23,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=UserLoginResponse)
 def login(user: UserLoginRequest):
-    db_user = db.get_by_email(user.email.strip().lower())
-
-    if not db_user or not verify_password(user.password, db_user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password."
-        )
-
-    token = build_access_token(db_user)
-    user_out = build_user_out(db_user)
-
-    return {
-        "success": True,
-        "user": user_out,
-        "token": token
-    }
+    return authenticate_user(user.email, user.password.get_secret_value())
 
 @router.post("/logout", response_model=BaseResponse)
 def logout(token: str = Depends(oauth2_scheme)):
-    revoked = revoke_token(token)
-
-    if not revoked:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token or already expired."
-        )
-
-    return {
-        "success": True,
-        "message": "Logged out successfully."
-    }
+    return logout_user(token)
     
 @router.post("/register/owner", response_model=OwnerRegisterResponse, status_code=201)
 def register_owner(data: OwnerRegister):
@@ -66,77 +41,16 @@ def register_clinic(data: ClinicRegister):
 
 @router.post("/forgot-password", response_model=BaseResponse)
 def forgot_password(request: ForgotPasswordRequest):
-    user = db.get_by_email(request.email)
-    
-    if user:
-            try:
-                reset_token = create_reset_token(user["id"])
-                
-                #send_password_reset_email(user["email"], reset_token)
-                test_password_reset_email(user["email"], reset_token)
-            except Exception as e:
-                pass
-
-    return {
-        "success": True,
-        "message": "Password reset email sent."
-    }
+    return initiate_password_reset(request.email)
 
 @router.post("/reset-password", response_model=BaseResponse)
-def reset_password(data: ResetPasswordRequest):
-    payload = verify_token(data.token, TokenType.RESET)
-    user_id = payload.get("sub")
-    
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload."
-        )
-
-    new_hashed = hash_password(data.newPassword)
-    db.update(user_id, {"password": new_hashed})
-
-    revoke_token(data.token)
-
-    return {
-        "success": True, 
-        "message": "Password has been updated successfully."
-    }
+def reset_password_endpoint(data: ResetPasswordRequest):
+    return reset_password(data.token, data.newPassword.get_secret_value())
 
 @router.put("/change-password", response_model=BaseResponse)
-def change_password(data: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
-    if not verify_password(data.currentPassword, current_user["password"]):
-
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is not correct."
-        )
-
-    new_hashed = hash_password(data.newPassword)
-    db.update(current_user["id"], {"password": new_hashed})
-
-    return {
-        "success": True, 
-        "message": "Password has been updated successfully."
-    }
+def change_password_endpoint(data: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    return change_password(current_user, data.currentPassword.get_secret_value(), data.newPassword.get_secret_value())
 
 @router.post("/verify-token", response_model=TokenVerificationResponse)
 def verify_token_API(token: str = Depends(oauth2_scheme)):
-    payload = verify_token(token, TokenType.ACCESS)
-
-    user_id = payload.get("sub")
-    user_type = payload.get("userType")
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid or expired token.")
-
-    user = db.get_by_id(user_id)
-
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found.")
-
-    return {
-        "success": True,
-        "user_id": user_id,
-        "user_type": user_type
-    }
+    return verify_user_token(token)

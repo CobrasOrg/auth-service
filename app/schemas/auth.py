@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator, model_validator
+from pydantic import BaseModel, EmailStr, SecretStr, field_validator, model_validator
 
 from app.schemas.user import OwnerOut, ClinicOut, UserType
 
@@ -9,15 +9,15 @@ from app.utils.validators import (
 
 class UserLoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: SecretStr
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    newPassword: str
-    confirmPassword: str
+    newPassword: SecretStr
+    confirmPassword: SecretStr
 
     @field_validator("newPassword")
     def validate_password(cls, value): 
@@ -33,9 +33,9 @@ class ResetPasswordRequest(BaseModel):
         return self
     
 class ChangePasswordRequest(BaseModel):
-    currentPassword: str
-    newPassword: str
-    confirmPassword: str
+    currentPassword: SecretStr
+    newPassword: SecretStr
+    confirmPassword: SecretStr
 
     @field_validator("currentPassword")
     def validate_current_password(cls, value): 
