@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, SecretStr, field_validator, model_vali
 
 from app.schemas.user import OwnerOut, ClinicOut, UserType
 
-from app.utils.validators import (
+from app.utils.validators import(
     validate_password_data, validate_token_data,
     validate_confirm_password, validate_current_password_exists
 )

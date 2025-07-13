@@ -72,8 +72,6 @@ def test_password_reset_email(user_email: str, token: str) -> bool:
 
     html_content, plain_text = result
 
-    #print(plain_text)
-
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html", mode="w", encoding="utf-8") as f:
         f.write(html_content)
         temp_path = Path(f.name)
