@@ -43,11 +43,6 @@ def validate_address_data(value: str):
         raise ValueError("Address must be at least 5 characters long.")
     return value.strip()
 
-def validate_locality_data(value: str):
-    if not value or len(value.strip()) < 2:
-        raise ValueError("Locality is required.")
-    return value.strip()
-
 def validate_email_data(value: str):
     return value.strip().lower()
 

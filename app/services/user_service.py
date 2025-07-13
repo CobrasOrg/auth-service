@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from app.db.mongo import MongoUserDB
-from app.schemas.user import UserType
+from app.schemas.user import UserType, Locality
 from app.utils.response_builder import get_user_output_model
 
 async def get_user_profile(user: dict, user_db: MongoUserDB) -> dict:
@@ -27,8 +27,8 @@ async def update_user_profile(user: dict, updates: dict, user_db: MongoUserDB) -
 
     if not updated_user:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing your request."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
         )
 
     return get_user_output_model(updated_user)
@@ -38,10 +38,10 @@ async def delete_user_account(user: dict, user_db: MongoUserDB) -> dict:
     
     if not deleted:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing your request."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
         )
-    
+        
     return {
         "success": True,
         "message": "Account deleted successfully."
