@@ -5,13 +5,34 @@ from pydantic import BaseModel, EmailStr, SecretStr, Field, field_validator, mod
 
 from app.utils.validators import(
     validate_password_data, validate_name_data, validate_phone_data, 
-    validate_address_data, validate_email_data, validate_locality_data, 
-    validate_confirm_password
+    validate_address_data, validate_email_data, validate_confirm_password
 )
 
 class UserType(str, Enum):
     OWNER = "owner"
     CLINIC = "clinic"
+
+class Locality(str, Enum):
+    SUBA = "Suba"
+    CHAPINERO = "Chapinero"
+    USAQUEN = "Usaquén"
+    BOSA = "Bosa"
+    KENNEDY = "Kennedy"
+    ENGATIVA = "Engativá"
+    FONTIBON = "Fontibón"
+    BARRIOS_UNIDOS = "Barrios Unidos"
+    TEUSAQUILLO = "Teusaquillo"
+    LOS_MARTIRES = "Los Mártires"
+    ANTONIO_NARINO = "Antonio Nariño"
+    PUENTE_ARANDA = "Puente Aranda"
+    LA_CANDELARIA = "La Candelaria"
+    RAFAEL_URIBE_URIBE = "Rafael Uribe Uribe"
+    CIUDAD_BOLIVAR = "Ciudad Bolívar"
+    SAN_CRISTOBAL = "San Cristóbal"
+    USME = "Usme"
+    SUMAPAZ = "Sumapaz"
+    SANTA_FE = "Santa Fe"
+    TUNJUELITO = "Tunjuelito"
 
 class BaseUserRegister(BaseModel):
     name: str = Field(..., description="Full name of the user")
@@ -62,11 +83,7 @@ class OwnerRegister(BaseUserRegister):
     }
 
 class ClinicRegister(BaseUserRegister):
-    locality: str = Field(..., description="City or municipality where the clinic is located")
-
-    @field_validator("locality")
-    def validate_locality(cls, value):
-        return validate_locality_data(value)
+    locality: Locality = Field(..., description="Locality of Bogotá where the clinic is located")
 
     model_config = {
         "json_schema_extra": {
@@ -77,7 +94,7 @@ class ClinicRegister(BaseUserRegister):
                 "confirmPassword": "SecureP@ssword123",
                 "phone": "+57123456789",
                 "address": "Carrera 7 #45-89",
-                "locality": "Medellín"
+                "locality": "Bosa"
             }
         }
     }
@@ -111,7 +128,7 @@ class OwnerOut(BaseUserOut):
     pass
 
 class ClinicOut(BaseUserOut):
-    locality: str = Field(..., description="City or municipality where the clinic is located")
+    locality: Locality = Field(..., description="Locality of Bogotá where the clinic is located")
 
     model_config = {
         "json_schema_extra": {
@@ -122,7 +139,7 @@ class ClinicOut(BaseUserOut):
                 "phone": "+57123456789",
                 "address": "Carrera 7 #45-89",
                 "userType": "clinic",
-                "locality": "Medellín",
+                "locality": "Bosa",
                 "createdAt": "2025-07-13T12:34:56.789Z",
                 "updatedAt": "2025-07-13T13:00:00.000Z"
             }
@@ -168,12 +185,7 @@ class OwnerUpdate(BaseUserUpdate):
     }
 
 class ClinicUpdate(BaseUserUpdate):
-    locality: Optional[str] = Field(None, description="Updated locality")
-
-    @field_validator("locality")
-    def validate_locality(cls, value):
-        if value:
-            return validate_locality_data(value)
+    locality: Optional[Locality] = Field(None, description="Updated locality")
 
     model_config = {
         "json_schema_extra": {

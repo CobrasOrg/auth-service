@@ -33,7 +33,7 @@ async def register_user(user_data: OwnerRegister | ClinicRegister, user_type: Us
     user_info["userType"] = user_type
 
     if user_type == UserType.CLINIC and isinstance(user_data, ClinicRegister):
-        user_info["locality"] = user_data.locality
+        user_info["locality"] = user_data.locality.value
 
     created = await user_db.create({**user_info, "password": hashed_password})
     return build_auth_response(created)
@@ -89,6 +89,7 @@ async def verify_user_token(
     payload = await verify_token(token, TokenType.ACCESS, store)
     user_id = payload.get("sub")
     user_type = payload.get("userType")
+    email = payload.get("email")
 
     if not user_id:
         raise HTTPException(
@@ -106,7 +107,8 @@ async def verify_user_token(
     return {
         "success": True,
         "user_id": user_id,
-        "user_type": user_type
+        "user_type": user_type,
+        "email": email
     }
 
 

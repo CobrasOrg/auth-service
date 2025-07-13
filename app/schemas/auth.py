@@ -63,3 +63,4 @@ class TokenVerificationResponse(BaseModel):
     success: bool = Field(..., description="Whether the token is valid", example=True)
     user_id: str = Field(..., description="User ID extracted from the token", example="65b4f50a-b8c6-4d04-8e54-730675247781")
     user_type: UserType = Field(..., description="Type of user (owner or clinic)", example="owner")
+    email: EmailStr = Field(..., description="Email of the user", example="esperanza@clinic.co")

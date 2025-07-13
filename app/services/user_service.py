@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from app.db.mongo import MongoUserDB
-from app.schemas.user import UserType
+from app.schemas.user import UserType, Locality
 from app.utils.response_builder import get_user_output_model
 
 async def get_user_profile(user: dict, user_db: MongoUserDB) -> dict:
