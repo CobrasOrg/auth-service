@@ -36,7 +36,6 @@ def render_email_templates(user_email: str, reset_link: str) -> tuple[str, str] 
     except Exception as e:
         return False
 
-
 def send_password_reset_email(to_email: str, token: str) -> bool:
     if not GMAIL_USER or not GMAIL_PASS:
         return False
