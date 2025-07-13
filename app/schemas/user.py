@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, field_validator, model_validator
+from pydantic import BaseModel, EmailStr, SecretStr, field_validator, model_validator
 
-from app.utils.validators import (
+from app.utils.validators import(
     validate_password_data, validate_name_data, validate_phone_data, 
     validate_address_data, validate_email_data, validate_locality_data, validate_confirm_password
 )
@@ -15,8 +15,8 @@ class UserType(str, Enum):
 class BaseUserRegister(BaseModel):
     name: str
     email: EmailStr
-    password: str
-    confirmPassword: str
+    password: SecretStr
+    confirmPassword: SecretStr
     phone: str
     address: str
 

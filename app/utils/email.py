@@ -36,7 +36,6 @@ def render_email_templates(user_email: str, reset_link: str) -> tuple[str, str] 
     except Exception as e:
         return False
 
-
 def send_password_reset_email(to_email: str, token: str) -> bool:
     if not GMAIL_USER or not GMAIL_PASS:
         return False
@@ -72,8 +71,6 @@ def test_password_reset_email(user_email: str, token: str) -> bool:
         return False
 
     html_content, plain_text = result
-
-    #print(plain_text)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html", mode="w", encoding="utf-8") as f:
         f.write(html_content)
