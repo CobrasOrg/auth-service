@@ -6,13 +6,13 @@ class Settings(BaseSettings):
     # API Configuration
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "PetMatch Authentication API"
-    VERSION: str = "1.0.5"
+    VERSION: str = "1.0.7"
     DESCRIPTION: str = "PetMatch Authentication and User Management API"
     
     SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    RESET_TOKEN_EXPIRE_MINUTES: int = 15
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    RESET_TOKEN_EXPIRE_MINUTES: int
     
     # Email Configuration
     GMAIL_USER: str
@@ -21,12 +21,12 @@ class Settings(BaseSettings):
     EMAIL_TEMPLATES_DIR: str = "app/templates"
     
     # Frontend URLs
-    FRONTEND_URL: str = "http://127.0.0.1"
-    RESET_PASSWORD_URL: str = "reset-password"
+    FRONTEND_URL: str
+    RESET_PASSWORD_URL: str
     
     # Database
-    MONGODB_URL: str = "mongodb://localhost:27017"
-    MONGODB_DB_NAME: str = "petmatch"
+    MONGODB_URL: str
+    MONGODB_DB_NAME: str
     
     # CORS
     BACKEND_CORS_ORIGINS: str | List[str] = ["*"]
@@ -53,10 +53,6 @@ class Settings(BaseSettings):
         if v and "@" not in v:
             raise ValueError("GMAIL_USER must be a valid email address")
         return v
-
-    @property
-    def reset_password_full_url(self) -> str:
-        return f"{self.FRONTEND_URL}{self.RESET_PASSWORD_URL}"
 
     class Config:
         case_sensitive = True

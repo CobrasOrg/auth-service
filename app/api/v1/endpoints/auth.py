@@ -1,13 +1,17 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from app.db.memory import db
+from app.db.mongo import MongoUserDB
 from app.core.auth import get_current_user, oauth2_scheme
-from app.utils.email import send_password_reset_email, test_password_reset_email
-from app.core.security import hash_password, verify_password
-from app.core.tokens import create_reset_token, verify_token, revoke_token, TokenType
-from app.utils.helpers import build_access_token, build_user_out, register_user
+from app.db.mongo_token_store import MongoRevokedTokenStore
+from app.db.dependencies import get_user_db, get_revoked_token_store
 
-from app.schemas.auth import (
+from app.services.auth_service import(
+    verify_user_token,
+    register_user, authenticate_user, logout_user,
+    change_password,  initiate_password_reset, reset_password
+)
+
+from app.schemas.auth import(
     ResetPasswordRequest, ChangePasswordRequest, ForgotPasswordRequest,
     BaseResponse, UserLoginRequest, UserLoginResponse, TokenVerificationResponse
 )
@@ -20,123 +24,151 @@ from app.schemas.user import(
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/login", response_model=UserLoginResponse)
-def login(user: UserLoginRequest):
-    db_user = db.get_by_email(user.email.strip().lower())
-
-    if not db_user or not verify_password(user.password, db_user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password."
-        )
-
-    token = build_access_token(db_user)
-    user_out = build_user_out(db_user)
-
-    return {
-        "success": True,
-        "user": user_out,
-        "token": token
+@router.post(
+    "/login",
+    response_model=UserLoginResponse,
+    summary="User login",
+    description="Authenticates a user using their email and password and returns an access token.",
+    responses={
+        200: {"description": "User authenticated successfully"},
+        401: {"description": "Invalid email or password"}
     }
+)
+async def login(user: UserLoginRequest, user_db: MongoUserDB = Depends(get_user_db)):
+    return await authenticate_user(user.email, user.password.get_secret_value(), user_db)
 
-@router.post("/logout", response_model=BaseResponse)
-def logout(token: str = Depends(oauth2_scheme)):
-    revoked = revoke_token(token)
 
-    if not revoked:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token or already expired."
-        )
-
-    return {
-        "success": True,
-        "message": "Logged out successfully."
+@router.post(
+    "/logout",
+    response_model=BaseResponse,
+    summary="Logout current user",
+    description="Revokes the access token, effectively logging the user out.",
+    responses={
+        200: {
+            "description": "Logged out successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Logged out successfully."
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid token or already expired"},
     }
-    
-@router.post("/register/owner", response_model=OwnerRegisterResponse, status_code=201)
-def register_owner(data: OwnerRegister):
-    result = register_user(data, UserType.OWNER)
-    return result
+)
+async def logout(
+    token: str = Depends(oauth2_scheme),
+    store: MongoRevokedTokenStore = Depends(get_revoked_token_store),
+):
+    return await logout_user(token, store)
 
-@router.post("/register/clinic", response_model=ClinicRegisterResponse, status_code=201)
-def register_clinic(data: ClinicRegister):
-    result = register_user(data, UserType.CLINIC)
-    return result
-
-@router.post("/forgot-password", response_model=BaseResponse)
-def forgot_password(request: ForgotPasswordRequest):
-    user = db.get_by_email(request.email)
-    
-    if user:
-            try:
-                reset_token = create_reset_token(user["id"])
-                
-                #send_password_reset_email(user["email"], reset_token)
-                test_password_reset_email(user["email"], reset_token)
-            except Exception as e:
-                pass
-
-    return {
-        "success": True,
-        "message": "Password reset email sent."
+@router.post(
+    "/register/owner",
+    response_model=OwnerRegisterResponse,
+    status_code=201,
+    summary="Register new owner",
+    description="Registers a new pet owner with required profile information.",
+    responses={
+        201: {"description": "Owner registered successfully"},
+        400: {"description": "Email already registered"}
     }
+)
+async def register_owner(data: OwnerRegister, user_db: MongoUserDB = Depends(get_user_db)):
+    return await register_user(data, UserType.OWNER, user_db)
 
-@router.post("/reset-password", response_model=BaseResponse)
-def reset_password(data: ResetPasswordRequest):
-    payload = verify_token(data.token, TokenType.RESET)
-    user_id = payload.get("sub")
-    
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload."
-        )
 
-    new_hashed = hash_password(data.newPassword)
-    db.update(user_id, {"password": new_hashed})
-
-    revoke_token(data.token)
-
-    return {
-        "success": True, 
-        "message": "Password has been updated successfully."
+@router.post(
+    "/register/clinic",
+    response_model=ClinicRegisterResponse,
+    status_code=201,
+    summary="Register new clinic",
+    description="Registers a new clinic user with required profile information and locality.",
+    responses={
+        201: {"description": "Clinic registered successfully"},
+        400: {"description": "Email already registered"}
     }
+)
+async def register_clinic(data: ClinicRegister, user_db: MongoUserDB = Depends(get_user_db)):
+    return await register_user(data, UserType.CLINIC, user_db)
 
-@router.put("/change-password", response_model=BaseResponse)
-def change_password(data: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
-    if not verify_password(data.currentPassword, current_user["password"]):
 
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is not correct."
-        )
-
-    new_hashed = hash_password(data.newPassword)
-    db.update(current_user["id"], {"password": new_hashed})
-
-    return {
-        "success": True, 
-        "message": "Password has been updated successfully."
+@router.post(
+    "/forgot-password",
+    response_model=BaseResponse,
+    summary="Send password reset email",
+    description="Sends a password reset link to the provided email address if the user exists.",
+    responses={
+        200: {
+            "description": "Password reset email sent",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Password reset email sent."
+                    }
+                }
+            }
+        },
+        422: {"description": "Validation error"}
     }
+)
+async def forgot_password(request: ForgotPasswordRequest, user_db: MongoUserDB = Depends(get_user_db)):
+    return await initiate_password_reset(request.email, user_db)
 
-@router.post("/verify-token", response_model=TokenVerificationResponse)
-def verify_token_API(token: str = Depends(oauth2_scheme)):
-    payload = verify_token(token, TokenType.ACCESS)
 
-    user_id = payload.get("sub")
-    user_type = payload.get("userType")
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid or expired token.")
-
-    user = db.get_by_id(user_id)
-
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found.")
-
-    return {
-        "success": True,
-        "user_id": user_id,
-        "user_type": user_type
+@router.post(
+    "/reset-password",
+    response_model=BaseResponse,
+    summary="Reset password",
+    description="Resets the user's password using a valid reset token.",
+    responses={
+        200: {"description": "Password reset successfully"},
+        401: {"description": "Invalid or expired token"},
+        404: {"description": "User not found"}
     }
+)
+async def reset_password_endpoint(
+    data: ResetPasswordRequest,
+    user_db: MongoUserDB = Depends(get_user_db),
+    store: MongoRevokedTokenStore = Depends(get_revoked_token_store),
+):
+    return await reset_password(data.token, data.newPassword.get_secret_value(), user_db, store)
+
+
+@router.put(
+    "/change-password",
+    response_model=BaseResponse,
+    summary="Change password",
+    description="Allows an authenticated user to change their password by providing the current one.",
+    responses={
+        200: {"description": "Password changed successfully"},
+        401: {"description": "Current password is incorrect"}
+    }
+)
+async def change_password_endpoint(
+    data: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user),
+    user_db: MongoUserDB = Depends(get_user_db),
+):
+    return await change_password(current_user, data.currentPassword.get_secret_value(), data.newPassword.get_secret_value(), user_db)
+
+
+@router.post(
+    "/verify-token",
+    response_model=TokenVerificationResponse,
+    summary="Verify access token",
+    description="Validates an access token and returns associated user information if it's valid.",
+    responses={
+        200: {"description": "Token is valid"},
+        401: {"description": "Invalid or expired token"}
+    }
+)
+async def verify_token_API(
+    token: str = Depends(oauth2_scheme),
+    user_db: MongoUserDB = Depends(get_user_db),
+    store: MongoRevokedTokenStore = Depends(get_revoked_token_store),
+):
+    return await verify_user_token(token, user_db, store)
+

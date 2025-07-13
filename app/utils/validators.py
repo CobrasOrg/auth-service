@@ -1,24 +1,30 @@
 import re
+from pydantic import SecretStr
 
-def validate_current_password_exists(value: str):
+def validate_current_password_exists(value: SecretStr):
     if not value:
         raise ValueError("Current password is required.")
     return value
 
-def validate_password_data(value: str):
-    if len(value) < 8:
+def validate_password_data(value: SecretStr):
+    password = value.get_secret_value()
+    if len(password) < 8:
         raise ValueError("Password must be at least 8 characters long.")
-    if not re.search(r"[A-Z]", value):
+    if not re.search(r"[A-Z]", password):
         raise ValueError("Password must contain at least one uppercase letter.")
-    if not re.search(r"[a-z]", value):
+    if not re.search(r"[a-z]", password):
         raise ValueError("Password must contain at least one lowercase letter.")
-    if not re.search(r"\d", value):
+    if not re.search(r"\d", password):
         raise ValueError("Password must contain at least one number.")
     return value
 
-def validate_confirm_password(value: str, confirm: str):
-    if value and value != confirm:
+def validate_confirm_password(value: SecretStr, confirm: SecretStr):
+    password = value.get_secret_value()
+    confirm_password = confirm.get_secret_value()
+
+    if password and password != confirm_password:
         raise ValueError("Passwords do not match.")
+    
     return value
 
 def validate_name_data(value: str):
@@ -35,11 +41,6 @@ def validate_phone_data(value: str):
 def validate_address_data(value: str):
     if len(value.strip()) < 5:
         raise ValueError("Address must be at least 5 characters long.")
-    return value.strip()
-
-def validate_locality_data(value: str):
-    if not value or len(value.strip()) < 2:
-        raise ValueError("Locality is required.")
     return value.strip()
 
 def validate_email_data(value: str):
