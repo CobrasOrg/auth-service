@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.db.mongo import MongoUserDB
 from app.api.v1.api import api_router
 from app.db.mongo_token_store import MongoRevokedTokenStore
-from app.core.errors import validation_exception_handler, http_exception_handler
+from app.core.exceptions import validation_exception_handler, http_exception_handler
 from app.db.database import connect_to_mongo, close_mongo_connection, get_database
 
 @asynccontextmanager
