@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 
 from app.db.mongo import MongoUserDB
-from app.core.auth import get_current_user, oauth2_scheme
+from app.core.auth import get_current_user, security
 from app.db.mongo_token_store import MongoRevokedTokenStore
 from app.db.dependencies import get_user_db, get_revoked_token_store
 
@@ -59,9 +60,10 @@ async def login(user: UserLoginRequest, user_db: MongoUserDB = Depends(get_user_
     }
 )
 async def logout(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     store: MongoRevokedTokenStore = Depends(get_revoked_token_store),
 ):
+    token = credentials.credentials
     return await logout_user(token, store)
 
 @router.post(
@@ -166,9 +168,10 @@ async def change_password_endpoint(
     }
 )
 async def verify_token_API(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     user_db: MongoUserDB = Depends(get_user_db),
     store: MongoRevokedTokenStore = Depends(get_revoked_token_store),
 ):
+    token = credentials.credentials
     return await verify_user_token(token, user_db, store)
 
