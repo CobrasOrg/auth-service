@@ -7,10 +7,8 @@ scrape_configs:
     metrics_path: /prometheus/metrics
     static_configs:
       - targets: ['localhost:9090']
-
-  - job_name: 'auth-service'
+  - job_name: 'app'
     scrape_interval: 5s
-    metrics_path: /api/v1/metrics
     static_configs:
-      - targets: ['auth-service-g7nh.onrender.com']
-    scheme: https
+      - targets: ['app:8000']
+
