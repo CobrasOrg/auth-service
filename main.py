@@ -56,11 +56,7 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 #Prometheus instrumentation
-Instrumentator(
-    should_group_status_codes=False,
-    should_ignore_untemplated=True,
-    excluded_handlers=["/api/v1/metrics"],
-).instrument(app).expose(app, endpoint="/api/v1/metrics")
+Instrumentator(should_group_status_codes=False).instrument(app).expose(app, endpoint="/api/v1/metrics")
 
 @app.get(
     "/",
