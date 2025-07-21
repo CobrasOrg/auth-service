@@ -57,7 +57,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 #Prometheus instrumentation
 if settings.DEBUG:
-    Instrumentator(should_group_status_codes=False).instrument(app).expose(app, endpoint=f"{settings.API_V1_STR}/metrics", tags=["metrics"])
+    Instrumentator(should_group_status_codes=False).instrument(app).expose(app, endpoint=f"{settings.API_V1_STR}/metrics", tags=["metrics"], include_in_schema=False)
 
 @app.get(
     "/",

@@ -2,6 +2,9 @@ services:
   app:
     build:
       context: .
+    environment:
+      - DEBUG=true
+      - API_V1_STR=/api/v1
     restart: unless-stopped
     container_name: app
     ports:
