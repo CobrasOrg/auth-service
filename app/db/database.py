@@ -7,6 +7,8 @@ class Database:
 db = Database()
 
 async def get_database() -> AsyncIOMotorClient:
+    if settings.DEBUG:
+        return db.client[settings.TEST_DB_NAME]
     return db.client[settings.MONGODB_DB_NAME]
 
 async def connect_to_mongo():

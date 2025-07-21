@@ -56,7 +56,8 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 #Prometheus instrumentation
-Instrumentator(should_group_status_codes=False).instrument(app).expose(app)
+if settings.DEBUG:
+    Instrumentator(should_group_status_codes=False).instrument(app).expose(app, endpoint=f"{settings.API_V1_STR}/metrics", tags=["metrics"])
 
 @app.get(
     "/",

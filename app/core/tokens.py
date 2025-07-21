@@ -1,5 +1,6 @@
 from enum import Enum
 from jose import jwt
+from uuid import uuid4
 from fastapi import HTTPException
 from datetime import datetime, timedelta, timezone
 from jose.exceptions import ExpiredSignatureError, JWTError
@@ -20,7 +21,7 @@ RESET_TOKEN_EXPIRE_MINUTES = settings.RESET_TOKEN_EXPIRE_MINUTES
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire, "type": TokenType.ACCESS})
+    to_encode.update({"exp": expire, "type": TokenType.ACCESS, "jti": str(uuid4()), "iat": datetime.now(timezone.utc)})
     
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
