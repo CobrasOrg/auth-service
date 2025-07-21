@@ -112,6 +112,9 @@ This will start:
 
 ## Monitoring
 
+The Grafana dashboard configuration used in this project was adapted from [Kludex/fastapi-prometheus-grafana](https://github.com/Kludex/fastapi-prometheus-grafana).
+
+
 The service includes a complete observability stack:
 
 - **Prometheus**: Collects metrics from the FastAPI application
