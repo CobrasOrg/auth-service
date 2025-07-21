@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.core.config import settings
 from app.db.mongo import MongoUserDB
@@ -53,6 +54,10 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 
 # Include routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+#Prometheus instrumentation
+if settings.DEBUG:
+    Instrumentator(should_group_status_codes=False).instrument(app).expose(app, endpoint=f"{settings.API_V1_STR}/metrics", tags=["metrics"], include_in_schema=False)
 
 @app.get(
     "/",

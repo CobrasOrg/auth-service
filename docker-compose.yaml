@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+    environment:
+      - DEBUG=true
+      - API_V1_STR=/api/v1
+    restart: unless-stopped
+    container_name: app
+    ports:
+      - "8000:8000"
+    networks:
+      - example-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - example-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - example-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - example-network
+
+networks:
+  example-network:
+    driver: bridge
