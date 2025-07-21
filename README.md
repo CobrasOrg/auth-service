@@ -1,131 +1,172 @@
-# FastAPI Service Template
+# Authentication Service
 
-Plantilla base para servicios backend con FastAPI y MongoDB.
+A modern, secure authentication service built with FastAPI, MongoDB, and complete observability stack (Prometheus & Grafana).
 
-## Características
+## Features
 
-- FastAPI como framework web
-- MongoDB como base de datos
-- Estructura modular y escalable
-- Configuración de CORS
-- Variables de entorno con python-dotenv
-- Husky para validación de mensajes de commit
-- Pre-commit hooks para linting y formateo
+- 🔐 Secure user authentication and authorization
+- 📨 Email verification and password reset functionality
+- 🗄️ MongoDB integration for data persistence
+- 📊 Built-in monitoring with Prometheus and Grafana
+- 🚀 Fast and async API endpoints
+- 📝 API documentation (Swagger/OpenAPI)
+- 🐳 Docker and Docker Compose support
 
-## Requisitos
+## Prerequisites
 
-- Python 3.8+
-- MongoDB
-- Node.js y npm (para Husky)
-- pip
+- Python 3.10+
+- Docker and Docker Compose
+- MongoDB (if running locally)
 
-## Instalación
+## Local Development Setup
 
-1. Clonar el repositorio:
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/tu-usuario/fastapi-service-template.git
-cd fastapi-service-template
+git clone https://github.com/CobrasOrg/auth-service
+cd auth-service
 ```
 
-2. Crear y activar entorno virtual:
+### 2. Set up a virtual environment
 
 ```bash
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
+# On Windows
+.\venv\Scripts\activate
+# On Unix or MacOS
+source venv/bin/activate
 ```
 
-3. Instalar dependencias de Python:
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Instalar dependencias de Node.js:
+### 4. Environment Variables
 
-```bash
-npm install
+Create a `.env` file in the root directory with the following variables (adjust as needed):
+
+```env
+DEBUG=True
+API_V1_STR=/api/v1
+MONGODB_URL=mongodb://localhost:27017
+MONGODB_DB_NAME=authDB
+TEST_DB_NAME=authDB_test
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+RESET_TOKEN_EXPIRE_MINUTES=15
+GMAIL_USER=email@example.com
+GMAIL_PASS=gmail_app_password
+FRONTEND_URL=http://localhost:5173
+EMAIL_FROM_NAME=account_name
+EMAIL_TEMPLATES_DIR=app/templates
+RESET_PASSWORD_URL=reset-password
 ```
 
-5. Configurar variables de entorno:
-
-```bash
-cp .env.example .env
-# Editar .env con tus configuraciones
-```
-
-## Ejecución
+### 5. Run the application locally
 
 ```bash
 uvicorn main:app --reload
 ```
 
-La aplicación estará disponible en:
+The API will be available at:
+- Main API: `http://localhost:8000`
+- API Documentation (Swagger UI): `http://localhost:8000/api/v1/docs`
+- API Documentation (ReDoc): `http://localhost:8000/api/v1/redoc`
 
-- http://localhost:8000 - Mensaje de bienvenida
-- http://localhost:8000/api/v1/base/health - Health check
-- http://localhost:8000/docs - Documentación Swagger UI
-- http://localhost:8000/redoc - Documentación ReDoc
+## Docker Deployment
 
-## Estructura del Proyecto
+To run the entire stack (API, MongoDB, Prometheus, and Grafana):
+
+```bash
+docker-compose up -d
+```
+
+Configure DB env:
+
+```env
+MONGODB_URL=mongodb://localhost:27017
+```
+
+This will start:
+- Authentication Service: `http://localhost:8000`
+- MongoDB: `mongodb://localhost:27017`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
+
+## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register` - Register a new user
+- `POST /api/v1/auth/login` - Login with email and password
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/logout` - Logout (invalidate tokens)
+
+### User Management
+- `GET /api/v1/users/me` - Get current user information
+- `PUT /api/v1/users/me` - Update current user information
+- `POST /api/v1/auth/password-reset-request` - Request password reset
+- `POST /api/v1/auth/password-reset` - Reset password
+
+## Monitoring
+
+The service includes a complete observability stack:
+
+- **Prometheus**: Collects metrics from the FastAPI application
+  - Access: `http://localhost:9090`
+
+- **Grafana**: Visualizes the metrics with pre-configured dashboards
+  - Access: `http://localhost:3000`
+  - Default credentials: admin/admin
+
+## Project Structure
 
 ```
-fastapi-service-template/
+auth-service/
 ├── app/
 │   ├── api/
 │   │   └── v1/
 │   │       ├── endpoints/
-│   │       │   └── base.py
-│   │       └── api.py
+│   │       │   ├── auth.py
+│   │       │   ├── debug.py
+│   │       │   └── user.py
 │   ├── core/
-│   │   └── config.py
+│   │   ├── auth.py
+│   │   ├── config.py
+│   │   ├── security.py
+│   │   └── tokens.py
 │   ├── db/
-│   │   └── database.py
-│   ├── models/
-│   │   └── base.py
-│   └── schemas/
-│       └── base.py
-├── .env.example
-├── .gitignore
-├── .pre-commit-config.yaml
-├── commitlint.config.js
+│   │   ├── database.py
+│   │   ├── mongo.py
+│   │   └── mongo_token_store.py
+│   ├── schemas/
+│   │   ├── auth.py
+│   │   └── user.py
+│   ├── services/
+│   │   ├── auth_service.py
+│   │   └── user_service.py
+│   └── templates/
+│       ├── password_reset.html
+│       └── password_reset.txt
+├── grafana/
+│   └── provisioning/
+│       ├── dashboards/
+│       └── datasources/
+├── prometheus/
+│   └── prometheus.yml
+├── docker-compose.yaml
+├── Dockerfile
 ├── main.py
-├── package.json
-├── README.md
 └── requirements.txt
 ```
 
-## Desarrollo
+## Security Features
 
-### Agregar Nuevos Endpoints
-
-1. Crear nuevo archivo en `app/api/v1/endpoints/`
-2. Definir router y endpoints
-3. Registrar router en `app/api/v1/api.py`
-
-### Convención de Mensajes de Commit
-
-Los mensajes de commit deben seguir el formato:
-
-```
-tipo(alcance): descripción
-
-[cuerpo opcional]
-
-[pie opcional]
-```
-
-Tipos permitidos:
-
-- feat: Nueva característica
-- fix: Corrección de bug
-- docs: Cambios en documentación
-- style: Cambios de formato
-- refactor: Refactorización de código
-- test: Agregar o modificar tests
-- chore: Cambios en tareas de mantenimiento
-
-## Licencia
-
-MIT
+- Password hashing using bcrypt
+- JWT tokens for authentication
+- Token blacklisting for logout
+- Email verification
+- Password reset functionality
+- Environment-based configuration

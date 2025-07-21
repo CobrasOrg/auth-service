@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "PetMatch Authentication API"
     VERSION: str = "1.0.7"
     DESCRIPTION: str = "PetMatch Authentication and User Management API"
+    DEBUG: bool
     
     SECRET_KEY: str
     ALGORITHM: str
@@ -25,8 +26,9 @@ class Settings(BaseSettings):
     RESET_PASSWORD_URL: str
     
     # Database
-    MONGODB_URL: str
-    MONGODB_DB_NAME: str
+    MONGODB_URL: str = "mongodb://localhost:27017"
+    MONGODB_DB_NAME: str = "petmatchDB"
+    TEST_DB_NAME: str = "petmatchDB_test"
     
     # CORS
     BACKEND_CORS_ORIGINS: str | List[str] = ["*"]
