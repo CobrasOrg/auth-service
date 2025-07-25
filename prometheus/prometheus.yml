@@ -16,4 +16,4 @@ scrape_configs:
     scheme: https
     metrics_path: /api/v1/metrics
     static_configs:
-      - targets: ['auth-service-g7nh.onrender.com']
+      - targets: ['auth-service-test-gjjc.onrender.com']

@@ -99,16 +99,51 @@ This will start:
 ## API Endpoints
 
 ### Authentication
-- `POST /api/v1/auth/register` - Register a new user
-- `POST /api/v1/auth/login` - Login with email and password
-- `POST /api/v1/auth/refresh` - Refresh access token
-- `POST /api/v1/auth/logout` - Logout (invalidate tokens)
+- `POST /api/v1/auth/login`  
+  **Login with email and password**  
+  Authenticates a user and returns an access token.
+
+- `POST /api/v1/auth/logout`  
+  **Logout**  
+  Invalidates the current access token.
+
+- `POST /api/v1/auth/register/owner`  
+  **Register a new pet owner**  
+  Creates an account for a new owner user.
+
+- `POST /api/v1/auth/register/clinic`  
+  **Register a new clinic**  
+  Creates an account for a new clinic user.
+
+- `POST /api/v1/auth/forgot-password`  
+  **Request password reset**  
+  Sends a password reset link to the user’s email.
+
+- `POST /api/v1/auth/reset-password`  
+  **Reset password**  
+  Resets a user’s password using a valid token.
+
+- `PUT /api/v1/auth/change-password`  
+  **Change password**  
+  Allows an authenticated user to change their password.
+
+- `POST /api/v1/auth/verify-token`  
+  **Verify access token**  
+  Validates a token and returns user data if valid.
+
 
 ### User Management
-- `GET /api/v1/users/me` - Get current user information
-- `PUT /api/v1/users/me` - Update current user information
-- `POST /api/v1/auth/password-reset-request` - Request password reset
-- `POST /api/v1/auth/password-reset` - Reset password
+- `GET /api/v1/user/profile`  
+  **Get current user's profile**  
+  Returns profile info of the currently authenticated user.
+
+- `PATCH /api/v1/user/profile`  
+  **Update current user's profile**  
+  Partially updates profile fields (e.g., name, locality).
+
+- `DELETE /api/v1/user/account`  
+  **Delete user account**  
+  Permanently deletes the user’s account.
 
 ## Monitoring
 
